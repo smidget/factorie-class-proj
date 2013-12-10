@@ -540,7 +540,6 @@ class StackedChainNer[L<:NerTag](labelDomain: CategoricalDomain[String],
 
 
   def test(testDocs: Seq[Document]): (Double, Double, Double) = {
-    val errorArray = Array[NerError]()
     var tokenTotal = 0.0
     var sentenceTotal = 0.0
     val t0 = System.currentTimeMillis()
