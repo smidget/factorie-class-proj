@@ -13,6 +13,7 @@
    limitations under the License. */
 
 package cc.factorie.app.nlp
+
 import cc.factorie.app.nlp.mention.Mention
 import cc.factorie.app.nlp.phrase.Phrase
 import cc.factorie.util.Threading
