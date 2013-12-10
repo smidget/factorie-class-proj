@@ -362,6 +362,22 @@ class ForwardPosTagger extends DocumentAnnotator {
     (tokenCorrect/tokenTotal, sentenceCorrect/sentenceTotal, tokensPerSecond, tokenTotal)
   }
   
+  def detailedAccuracy(sentences:Iterable[Sentence]): collection.mutable.HashMap[String,Array[Token]] = {
+    // TODO initialize hashmap with known keyset of PennPosDomain x PennPosDomain?
+    //val errorTypes = PennPosDomain.categories.size*PennPosDomain.categories.size
+    val errors = new collection.mutable.HashMap[String,Array[Token]]()
+    sentences.foreach(s => {
+      process(s)
+      s.foreach(t => {
+        val errType = t.attr[LabeledPennPosTag].value.toString + "~*~" + t.posTag
+        if(!errors.contains(errType))
+          errors(errType) = Array[Token]()
+        errors(errType) :+= t
+      })
+    })
+    errors
+  }
+  
   def test(sentences:Iterable[Sentence]) = {
     println("Testing on " + sentences.size + " sentences...")
     val (tokAccuracy, sentAccuracy, speed, tokens) = accuracy(sentences)
