@@ -19,7 +19,7 @@ limitations under the License.
 
   <name>Factorie</name>
   <groupId>cc.factorie</groupId>
-  <artifactId>factorie</artifactId>
+  <artifactId>factorie-class-proj</artifactId>
   <version>1.0-SNAPSHOT</version>
   <inceptionYear>2009</inceptionYear>
 
@@ -157,7 +157,7 @@ limitations under the License.
     <testSourceDirectory>src/test/scala</testSourceDirectory>
     <pluginManagement>
       <plugins>
-          <!--This plugin's configuration is used to store Eclipse 
+          <!--This plugin's configuration is used to store Eclipse
               m2e 1.0 settings only. It has no influence on the Maven build itself. -->
           <plugin>
               <groupId>org.eclipse.m2e</groupId>
