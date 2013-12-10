@@ -38,14 +38,14 @@ trait DocumentAnnotatorErrorTracker {
 }
 
 /** Used as a stand-in dummy DocumentAnnotator in the DocumentAnnotatorMap when an annotation was added but not by a real DocumentAnnotator. */
-object UnknownDocumentAnnotator extends DocumentAnnotator {
+object UnknownDocumentAnnotatorErrorTracker extends DocumentAnnotatorErrorTracker {
   def process(document: Document): Document = document
   def prereqAttrs: Iterable[Class[_]] = Nil
   def postAttrs: Iterable[Class[_]] = Nil
   def tokenAnnotationString(token: Token) = null
 }
 
-object NoopDocumentAnnotator extends DocumentAnnotator {
+object NoopDocumentAnnotatorErrorTracker extends DocumentAnnotatorErrorTracker {
   def process(document: Document): Document = document
   def prereqAttrs: Iterable[Class[_]] = Nil
   def postAttrs: Iterable[Class[_]] = Nil
