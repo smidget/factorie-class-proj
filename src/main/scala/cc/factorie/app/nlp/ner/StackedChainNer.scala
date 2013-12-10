@@ -30,6 +30,8 @@ import cc.factorie.variable._
 import cc.factorie.optimize.Trainer
 import cc.factorie.la.WeightsMapAccumulator
 
+class NerError(val token:Token,  val predictedLabel:String, val goldLabel:String, val correct:Boolean)
+
 
 class TokenSequence[T<:NerTag](token: Token)(implicit m: Manifest[T]) extends collection.mutable.ArrayBuffer[Token] {
   this.prepend(token)
@@ -512,7 +514,33 @@ class StackedChainNer[L<:NerTag](labelDomain: CategoricalDomain[String],
     printEvaluation(trainDocuments, testDocuments, "FINAL")
   }
 
+  def testError(testDocs: Seq[Document]): (collection.mutable.HashMap[String,Array[Token]], Double) = {
+    var tokenTotal = 0.0
+    var sentenceTotal = 0.0
+    val t0 = System.currentTimeMillis()
+    val errorHash = collection.mutable.HashMap[String,Array[Token]]()
+
+    val segmentEvaluation = new cc.factorie.app.chain.SegmentEvaluation[L with LabeledMutableCategoricalVar[String]](labelDomain.categories.filter(_.length > 2).map(_.substring(2)), "(B|U)-", "(I|L)-")
+    testDocs.foreach(doc => {
+      process(doc)
+      for(sentence <- doc.sentences) {
+        segmentEvaluation += sentence.tokens.map(_.attr[L with LabeledMutableCategoricalVar[String]])
+        for (token <- sentence.tokens) {
+          val label = token.attr[LabeledMutableCategoricalVar[String]]
+          val key = label.value + "~*~" + label.target.value
+          if(!errorHash.contains(key)) errorHash(key) = Array[Token]()
+          errorHash(key) :+= token
+        }
+      }
+      sentenceTotal += doc.sentenceCount
+      tokenTotal += doc.tokenCount
+    })
+    (errorHash, segmentEvaluation.f1)
+  }
+
+
   def test(testDocs: Seq[Document]): (Double, Double, Double) = {
+    val errorArray = Array[NerError]()
     var tokenTotal = 0.0
     var sentenceTotal = 0.0
     val t0 = System.currentTimeMillis()
