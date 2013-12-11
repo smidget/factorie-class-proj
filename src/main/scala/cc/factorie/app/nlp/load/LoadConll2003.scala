@@ -23,7 +23,7 @@ import cc.factorie.app.nlp.Document
 import cc.factorie.app.nlp.Sentence
 import cc.factorie.app.nlp.Token
 import cc.factorie.app.nlp.UnknownDocumentAnnotator
-import cc.factorie.app.nlp.pos.PennPosTag
+import cc.factorie.app.nlp.pos.{LabeledPennPosTag, PennPosTag}
 
 // Usage:
 // Either LoadConll2003.fromFilename("foo")
@@ -71,7 +71,8 @@ case class LoadConll2003(BILOU:Boolean = false) extends Load with FastLogging {
         if (sentence.length > 0) document.appendString(" ")
         val token = new Token(sentence, word)
         token.attr += new LabeledIobConllNerTag(token, ner)
-        token.attr += new cc.factorie.app.nlp.pos.PennPosTag(token, partOfSpeech)
+        token.attr += new LabeledPennPosTag(token, if (partOfSpeech == "XX") "PUNC" else partOfSpeech)
+        //token.attr += new cc.factorie.app.nlp.pos.PennPosTag(token, partOfSpeech)
       }
     }
     if (BILOU) convertToBILOU(documents)
