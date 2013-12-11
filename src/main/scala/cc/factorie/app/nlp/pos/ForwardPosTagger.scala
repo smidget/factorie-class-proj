@@ -369,7 +369,7 @@ class ForwardPosTagger extends DocumentAnnotator {
     sentences.foreach(s => {
       process(s)
       s.foreach(t => {
-        val errType = t.attr[LabeledPennPosTag].value.toString + "~*~" + t.posTag
+        val errType = t.attr[LabeledPennPosTag].value.toString + "~*~" + t.attr[LabeledPennPosTag].target.value.toString
         if(!errors.contains(errType))
           errors(errType) = Array[Token]()
         errors(errType) :+= t

@@ -514,20 +514,21 @@ class StackedChainNer[L<:NerTag](labelDomain: CategoricalDomain[String],
     printEvaluation(trainDocuments, testDocuments, "FINAL")
   }
 
-  def testError(testDocs: Seq[Document]): (collection.mutable.HashMap[String,Array[Token]], Double) = {
+  def testError(testDocs: Seq[Document]): (collection.mutable.HashMap[String,Array[Token]]) = {
     var tokenTotal = 0.0
     var sentenceTotal = 0.0
     val t0 = System.currentTimeMillis()
     val errorHash = collection.mutable.HashMap[String,Array[Token]]()
 
-    val segmentEvaluation = new cc.factorie.app.chain.SegmentEvaluation[L with LabeledMutableCategoricalVar[String]](labelDomain.categories.filter(_.length > 2).map(_.substring(2)), "(B|U)-", "(I|L)-")
+//    val segmentEvaluation = new cc.factorie.app.chain.SegmentEvaluation[L with LabeledMutableCategoricalVar[String]](labelDomain.categories.filter(_.length > 2).map(_.substring(2)), "(B|U)-", "(I|L)-")
     testDocs.foreach(doc => {
       process(doc)
       for(sentence <- doc.sentences) {
-        segmentEvaluation += sentence.tokens.map(_.attr[L with LabeledMutableCategoricalVar[String]])
+//        segmentEvaluation += sentence.tokens.map(_.attr[L with LabeledMutableCategoricalVar[String]])
         for (token <- sentence.tokens) {
           val label = token.attr[LabeledMutableCategoricalVar[String]]
-          val key = label.value + "~*~" + label.target.value
+          val tag = token.attr[L].value
+          val key = label.value + "~*~" + tag
           if(!errorHash.contains(key)) errorHash(key) = Array[Token]()
           errorHash(key) :+= token
         }
@@ -535,12 +536,11 @@ class StackedChainNer[L<:NerTag](labelDomain: CategoricalDomain[String],
       sentenceTotal += doc.sentenceCount
       tokenTotal += doc.tokenCount
     })
-    (errorHash, segmentEvaluation.f1)
+    errorHash
   }
 
 
   def test(testDocs: Seq[Document]): (Double, Double, Double) = {
-    val errorArray = Array[NerError]()
     var tokenTotal = 0.0
     var sentenceTotal = 0.0
     val t0 = System.currentTimeMillis()
@@ -604,7 +604,7 @@ class ConllStackedChainNer(embeddingMap: SkipGramEmbedding,
     } else document
   }
 }
-//object ConllStackedChainNer extends ConllStackedChainNer(SkipGramEmbedding, 100, 1.0, true, ClasspathURL[ConllStackedChainNer](".factorie"))
+object ConllStackedChainNer extends ConllStackedChainNer(SkipGramEmbedding, 100, 1.0, true, ClasspathURL[ConllStackedChainNer](".factorie"))
 
 class NoEmbeddingsConllStackedChainNer(url:java.net.URL) extends ConllStackedChainNer(null, 0, 0.0, false, url)
 object NoEmbeddingsConllStackedChainNer extends NoEmbeddingsConllStackedChainNer(ClasspathURL[NoEmbeddingsConllStackedChainNer](".factorie"))
