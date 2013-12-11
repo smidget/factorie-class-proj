@@ -528,7 +528,7 @@ class StackedChainNer[L<:NerTag](labelDomain: CategoricalDomain[String],
         for (token <- sentence.tokens) {
           val label = token.attr[LabeledMutableCategoricalVar[String]]
           val tag = token.attr[L].value
-          val key = label.value + "~*~" + tag
+          val key = label.target.value + "~*~" + tag
           if(!errorHash.contains(key)) errorHash(key) = Array[Token]()
           errorHash(key) :+= token
         }
