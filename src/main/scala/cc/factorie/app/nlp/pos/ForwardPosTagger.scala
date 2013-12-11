@@ -361,22 +361,39 @@ class ForwardPosTagger extends DocumentAnnotator {
     val tokensPerSecond = (tokenTotal/totalTime)*1000.0
     (tokenCorrect/tokenTotal, sentenceCorrect/sentenceTotal, tokensPerSecond, tokenTotal)
   }
-  
-  def detailedAccuracy(sentences:Iterable[Sentence]): collection.mutable.HashMap[String,Array[Token]] = {
-    // TODO initialize hashmap with known keyset of PennPosDomain x PennPosDomain?
-    //val errorTypes = PennPosDomain.categories.size*PennPosDomain.categories.size
-    val errors = new collection.mutable.HashMap[String,Array[Token]]()
-    sentences.foreach(s => {
-      process(s)
-      s.foreach(t => {
-        val errType = t.attr[LabeledPennPosTag].value.toString + "~*~" + t.attr[LabeledPennPosTag].target.value.toString
-        if(!errors.contains(errType))
-          errors(errType) = Array[Token]()
-        errors(errType) :+= t
+
+    def detailedAccuracy(documents:Iterable[Document]): collection.mutable.HashMap[String,Array[Token]] = {
+      val errors = new collection.mutable.HashMap[String,Array[Token]]()
+      documents.foreach(d => {
+        d.sentences.foreach(s => {
+          process(s)
+          s.foreach(t => {
+            val errType = t.attr[LabeledPennPosTag].value.toString + "~*~" + t.attr[LabeledPennPosTag].target.value.toString
+            if(!errors.contains(errType))
+              errors(errType) = Array[Token]()
+            errors(errType) :+= t
+          })
+        })
       })
-    })
-    errors
-  }
+      errors
+    }
+
+
+//    def detailedAccuracy(sentences:Iterable[Sentence]): collection.mutable.HashMap[String,Array[Token]] = {
+//    // TODO initialize hashmap with known keyset of PennPosDomain x PennPosDomain?
+//    //val errorTypes = PennPosDomain.categories.size*PennPosDomain.categories.size
+//    val errors = new collection.mutable.HashMap[String,Array[Token]]()
+//    sentences.foreach(s => {
+//      process(s)
+//      s.foreach(t => {
+//        val errType = t.attr[LabeledPennPosTag].value.toString + "~*~" + t.attr[LabeledPennPosTag].target.value.toString
+//        if(!errors.contains(errType))
+//          errors(errType) = Array[Token]()
+//        errors(errType) :+= t
+//      })
+//    })
+//    errors
+//  }
   
   def test(sentences:Iterable[Sentence]) = {
     println("Testing on " + sentences.size + " sentences...")
