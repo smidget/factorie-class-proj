@@ -29,7 +29,7 @@ import scala.Some
 
 // TODO We should add the ability to explicitly permit and forbid label transitions
 // Was Label <: LabeledMutableDiscreteVar
-case class ViterbiResults(mapScore: Double, mapValues: Array[Int], localScores: Array[DenseTensor1])
+case class ViterbiResults(mapScore: Double, mapValues: Array[Int], secondMapValues: Array[Int], localScores: Array[DenseTensor1])
 
 class ChainModel[Label <: MutableDiscreteVar, Features <: CategoricalVectorVar[String], Token <: Observation[Token]]
 (val labelDomain: CategoricalDomain[String],
@@ -129,29 +129,44 @@ class ChainModel[Label <: MutableDiscreteVar, Features <: CategoricalVectorVar[S
     val costs = Array.fill(varying.size)(new DenseTensor1(d1, Double.NegativeInfinity))
     val backPointers = Array.fill(varying.size)(Array.fill[Int](d1)(-1))
 
+    val secondCosts = Array.fill(varying.size)(new DenseTensor1(d1, Double.NegativeInfinity))
+    val secondBackPointers = Array.fill(varying.size)(Array.fill[Int](d1)(-1))
+
     costs(0) := localScores(0)
 
     var i = 1
     while (i < varying.size) {
       val curLocalScores = localScores(i)
       val curCost = costs(i)
+      val secondCurCost = secondCosts(i)
       val curBackPointers = backPointers(i)
+      val secondCurBackPointers = secondBackPointers(i)
       val prevCost = costs(i - 1)
       var vi = 0
       while (vi < d1) {
         var maxScore = Double.NegativeInfinity
         var maxIndex = -1
+        var secondScore = Double.NegativeInfinity
+        var secondIndex = -1
         var vj = 0
         while (vj < d1) {
           val curScore = markovScores(vj * d1 + vi) + prevCost(vj) + curLocalScores(vi)
           if (curScore > maxScore) {
+            secondScore = maxScore
+            secondIndex = maxIndex
             maxScore = curScore
             maxIndex = vj
           }
           vj += 1
         }
+
+        if(secondIndex == -1) {
+          secondIndex = maxIndex
+        }
         curCost(vi) = maxScore
         curBackPointers(vi) = maxIndex
+        secondCurCost(vi) = secondScore
+        secondCurBackPointers(vi) = secondIndex
         vi += 1
       }
       i += 1
@@ -159,13 +174,17 @@ class ChainModel[Label <: MutableDiscreteVar, Features <: CategoricalVectorVar[S
 
     val mapValues = Array.fill[Int](varying.size)(0)
     mapValues(mapValues.size - 1) = costs.last.maxIndex
+
+    val secondMapValues = Array.fill[Int](varying.size)(0)
+    secondMapValues(mapValues.size - 1) = costs.last.maxIndex
     var j = mapValues.size - 2
     while (j >= 0) {
       mapValues(j) = backPointers(j + 1)(mapValues(j + 1))
+      secondMapValues(j) = secondBackPointers(j + 1)(secondMapValues(j + 1))
       j -= 1
     }
 
-    ViterbiResults(costs.last.max, mapValues, localScores)
+    ViterbiResults(costs.last.max, mapValues, secondMapValues, localScores)
   }
 
   def maximize(vars: Seq[Label])(implicit d: DiffList): ViterbiResults = {
@@ -265,7 +284,7 @@ class ChainModel[Label <: MutableDiscreteVar, Features <: CategoricalVectorVar[S
   class ChainViterbiExample(varying: Seq[Label with LabeledMutableDiscreteVar], addToLocalScoresOpt: () => Option[Array[Tensor1]] = () => None) extends Example {
     def accumulateValueAndGradient(value: DoubleAccumulator, gradient: WeightsMapAccumulator): Unit = {
       if (varying.length == 0) return
-      val ViterbiResults(mapScore, mapValues, localScores) = viterbiFast(varying, addToLocalScoresOpt())
+      val ViterbiResults(mapScore, mapValues, secondMapValues, localScores) = viterbiFast(varying, addToLocalScoresOpt())
       val transScores = markov.weights.value
       if (value ne null)
         value.accumulate(-mapScore)
