@@ -528,7 +528,7 @@ class StackedChainNer[L<:NerTag](labelDomain: CategoricalDomain[String],
         for (token <- sentence.tokens) {
           val label = token.attr[LabeledMutableCategoricalVar[String]]
           val tag = token.attr[L].value
-          val key = label.value + "~*~" + tag
+          val key = label.target.value + "~*~" + tag
           if(!errorHash.contains(key)) errorHash(key) = Array[Token]()
           errorHash(key) :+= token
         }
@@ -585,7 +585,8 @@ class StackedChainNer[L<:NerTag](labelDomain: CategoricalDomain[String],
     if (document.tokenCount == 0) return
     for(sentence <- document.sentences if sentence.tokens.size > 0) {
       val vars = sentence.tokens.map(_.attr[L]).toSeq
-      (if (useModel2) model2 else model).maximize(vars)(null)
+      val results = (if (useModel2) model2 else model).maximize(vars)(null)
+      sentence.attr += results
     }
   }
 }

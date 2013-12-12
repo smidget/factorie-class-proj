@@ -29,6 +29,8 @@ import scala.Some
 
 // TODO We should add the ability to explicitly permit and forbid label transitions
 // Was Label <: LabeledMutableDiscreteVar
+case class ViterbiResults(mapScore: Double, mapValues: Array[Int], localScores: Array[DenseTensor1])
+
 class ChainModel[Label <: MutableDiscreteVar, Features <: CategoricalVectorVar[String], Token <: Observation[Token]]
 (val labelDomain: CategoricalDomain[String],
   val featuresDomain: CategoricalVectorDomain[String],
@@ -113,7 +115,6 @@ class ChainModel[Label <: MutableDiscreteVar, Features <: CategoricalVectorVar[S
     }
   }
 
-  case class ViterbiResults(mapScore: Double, mapValues: Array[Int], localScores: Array[DenseTensor1])
   case class InferenceResults(logZ: Double, alphas: Array[DenseTensor1], betas: Array[DenseTensor1], localScores: Array[DenseTensor1])
 
   def viterbiFast(varying: Seq[Label], addToLocalScoresOpt: Option[Array[Tensor1]] = None): ViterbiResults = {
@@ -167,10 +168,12 @@ class ChainModel[Label <: MutableDiscreteVar, Features <: CategoricalVectorVar[S
     ViterbiResults(costs.last.max, mapValues, localScores)
   }
 
-  def maximize(vars: Seq[Label])(implicit d: DiffList): Unit = {
-    if (vars.isEmpty) return
+  def maximize(vars: Seq[Label])(implicit d: DiffList): ViterbiResults = {
+    if (vars.isEmpty) return null
     val result = viterbiFast(vars)
     for (i <- 0 until vars.length) vars(i).set(result.mapValues(i))
+
+    result
   }
 
   def getHammingLossScores(varying: Seq[Label with LabeledMutableDiscreteVar]): Array[Tensor1] = {
