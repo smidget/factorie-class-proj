@@ -126,7 +126,7 @@ class Token(val stringStart:Int, val stringEnd:Int) extends cc.factorie.app.chai
   def matches(t2:Token): Boolean = string == t2.string // TODO Consider renaming "stringMatches"
   /** Return true if the first character of the word is upper case. */
   def isCapitalized: Boolean = java.lang.Character.isUpperCase(string(0))
-  def isPunctuation: Boolean = string.matches("\\{Punct}")
+  def isPunctuation: Boolean = string.matches("\\p{Punct}")//|[\u030B\u030E])") // unicode directional quotes
   /** Return true if any character of the word is lower case. */
   def containsLowerCase: Boolean = string.exists(c => java.lang.Character.isLowerCase(c))
   /** Return true if any character of the word is upper case. */
