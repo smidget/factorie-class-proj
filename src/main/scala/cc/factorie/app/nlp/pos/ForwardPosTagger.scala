@@ -8,6 +8,7 @@ import cc.factorie.util.HyperparameterMain
 import cc.factorie.variable.{BinaryFeatureVectorVariable, CategoricalVectorDomain}
 import cc.factorie.optimize.Trainer
 import cc.factorie.app.classify.backend.LinearMulticlassClassifier
+import cc.factorie.app.nlp.ner.LabeledBilouConllNerTag
 
 class ForwardPosTagger extends DocumentAnnotator {
   // Different ways to load saved parameters
@@ -256,6 +257,7 @@ class ForwardPosTagger extends DocumentAnnotator {
     addFeature("HasPeriod="+(w0.indexOf('.') >= 0))
     addFeature("HasHyphen="+(w0.indexOf('-') >= 0))
     addFeature("HasDigit="+(l0.indexOf('0', 4) >= 0)) // The 4 is to skip over "W@0="
+    addFeature("NERTAG=" + token.attr[LabeledBilouConllNerTag].value)
     //addFeature("MiddleHalfCap="+token.string.matches(".+1/2[A-Z].*")) // Paper says "contains 1/2+capital(s) not at the beginning".  Strange feature.  Why? -akm
     tensor
   }
@@ -410,7 +412,7 @@ class ForwardPosTagger extends DocumentAnnotator {
     val toksPerDoc = 5000
     WordData.computeWordFormsByDocumentFrequency(trainSentences.flatMap(_.tokens), 1, toksPerDoc)
     WordData.computeAmbiguityClasses(trainSentences.flatMap(_.tokens))
-    
+
     // Prune features by count
     FeatureDomain.dimensionDomain.gatherCounts = true
     for (sentence <- trainSentences) features(sentence.tokens) // just to create and count all features
@@ -529,6 +531,14 @@ object ForwardPosTrainer extends HyperparameterMain {
     
     val trainDocs = trainFileList.map(load.LoadOntonotes5.fromFilename(_).head)
     val testDocs =  testFileList.map(load.LoadOntonotes5.fromFilename(_).head)
+
+
+    // Get the NER tags
+    val ner = app.nlp.ner.ConllStackedChainNer
+    val pipeline = app.nlp.DocumentAnnotatorPipeline(ner)
+    println("RUNNING NER PIPELINE ON SENTENCES")
+    (trainDocs ++ testDocs).foreach( d => pipeline.process(d))
+    println("SUCCESSFULLY RAN NER PIPELINE")
 
     //for (d <- trainDocs) println("POS3.train 1 trainDoc.length="+d.length)
     println("Read %d training tokens from %d files.".format(trainDocs.map(_.tokenCount).sum, trainDocs.size))
