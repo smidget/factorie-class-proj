@@ -263,7 +263,7 @@ class StackedChainNer[L<:NerTag](labelDomain: CategoricalDomain[String],
       if (token.isPunctuation) features += "PUNCTUATION"
 
       // Assume that the POS tagger has been run for this
-      if (token.attr.contains(classOf[LabeledPennPosTag])) features += "POSTAG="+token.attr[LabeledPennPosTag].value
+      features += "POSTAG="+token.attr[LabeledPennPosTag].target.value
 
       if (lexicon.iesl.Month.containsLemmatizedWord(word)) features += "MONTH"
       if (lexicon.iesl.Day.containsLemmatizedWord(word)) features += "DAY"
