@@ -636,6 +636,11 @@ object ConllStackedChainNerTrainer extends HyperparameterMain {
     // Parse command-line
     val opts = new StackedChainNerOpts
     opts.parse(args)
+
+    // Grab the tagger for tagging with the POS tags before we train on the datums
+    val tagger = app.nlp.pos.OntonotesForwardPosTagger
+    val pipeline = app.nlp.DocumentAnnotatorPipeline(tagger)
+
     val ner = new ConllStackedChainNer(null: SkipGramEmbedding, opts.embeddingDim.value, opts.embeddingScale.value, opts.useOffsetEmbedding.value)
 
     ner.aggregate = opts.aggregateTokens.wasInvoked
@@ -655,6 +660,10 @@ object ConllStackedChainNerTrainer extends HyperparameterMain {
 
     val trainDocs = trainDocsFull.take((trainDocsFull.length*trainPortionToTake).floor.toInt)
     val testDocs = testDocsFull.take((testDocsFull.length*testPortionToTake).floor.toInt)
+
+    println("ANNOTATING WITH POS TAGS")
+    (trainDocs ++ testDocs).foreach( d => pipeline.process(d))
+    println("SUCCESSFULLY ANNOTATED WITH POS TAGS")
 
 
     val result = ner.train(trainDocs,testDocs, opts.rate.value, opts.delta.value)
