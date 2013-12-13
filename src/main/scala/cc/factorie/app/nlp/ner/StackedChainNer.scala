@@ -639,7 +639,9 @@ object ConllStackedChainNerTrainer extends HyperparameterMain {
 
     // Grab the tagger for tagging with the POS tags before we train on the datums
     val tagger = app.nlp.pos.OntonotesForwardPosTagger
+    println("TAGGER LOADED")
     val pipeline = app.nlp.DocumentAnnotatorPipeline(tagger)
+    println("PIPELINE LOADED")
 
     val ner = new ConllStackedChainNer(null: SkipGramEmbedding, opts.embeddingDim.value, opts.embeddingScale.value, opts.useOffsetEmbedding.value)
 
