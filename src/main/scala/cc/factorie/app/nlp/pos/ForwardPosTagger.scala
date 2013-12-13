@@ -257,7 +257,7 @@ class ForwardPosTagger extends DocumentAnnotator {
     addFeature("HasPeriod="+(w0.indexOf('.') >= 0))
     addFeature("HasHyphen="+(w0.indexOf('-') >= 0))
     addFeature("HasDigit="+(l0.indexOf('0', 4) >= 0)) // The 4 is to skip over "W@0="
-    addFeature("NERTAG=" + token.attr[LabeledBilouConllNerTag].value)
+    addFeature("NERTAG=" + token.attr[LabeledBilouConllNerTag].target.value)
     //addFeature("MiddleHalfCap="+token.string.matches(".+1/2[A-Z].*")) // Paper says "contains 1/2+capital(s) not at the beginning".  Strange feature.  Why? -akm
     tensor
   }
