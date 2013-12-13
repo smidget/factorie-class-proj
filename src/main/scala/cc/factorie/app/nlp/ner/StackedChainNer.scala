@@ -16,7 +16,7 @@ package cc.factorie.app.nlp.ner
 import cc.factorie._
 import app.strings._
 import cc.factorie.util.{ClasspathURL, CmdOptions, HyperparameterMain, BinarySerializer}
-import cc.factorie.app.nlp.pos.PennPosTag
+import cc.factorie.app.nlp.pos.{LabeledPennPosTag, PennPosTag}
 import cc.factorie.app.nlp._
 import cc.factorie.app.chain._
 import scala.io._
@@ -261,6 +261,9 @@ class StackedChainNer[L<:NerTag](labelDomain: CategoricalDomain[String],
       features += "SHAPE="+cc.factorie.app.strings.stringShape(rawWord, 2)
       if (word.length > 5) { features += "P="+cc.factorie.app.strings.prefix(word, 4); features += "S="+cc.factorie.app.strings.suffix(word, 4) }
       if (token.isPunctuation) features += "PUNCTUATION"
+
+      // Assume that the POS tagger has been run for this
+      if (token.attr.contains(classOf[LabeledPennPosTag])) features += "POSTAG="+token.attr[LabeledPennPosTag].value
 
       if (lexicon.iesl.Month.containsLemmatizedWord(word)) features += "MONTH"
       if (lexicon.iesl.Day.containsLemmatizedWord(word)) features += "DAY"
